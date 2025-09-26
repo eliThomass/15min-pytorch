@@ -1,3 +1,5 @@
+import torch
+from PIL import Image
 from torch import nn, save, load # Our neural network
 from torch.optim import Adam # Our optimization model
 from torch.utils.data import DataLoader # Needed to load our datasets
@@ -29,27 +31,31 @@ class ImageClassifier(nn.Module):
     
 # Instance of the neural network, loss & optimizer
 
-clf = ImageClassifier().to('cpu')
-opt = Adam(clf.parameters(), lr=0.15)
+clf = ImageClassifier().to('cuda')
+opt = Adam(clf.parameters(), lr=0.01)
 loss_fn = nn.CrossEntropyLoss()
 
 if __name__ == "__main__":
-    print('starting epochs')
-    for epoch in range(3):
-        for batch in dataset:
-            print(batch)
-            X, y = batch
-            X, y = X.to('cpu'), y.to('cpu')
-            yhat = clf(X)
-            loss = loss_fn(yhat, y)
+    # print('starting epochs')
+    # for epoch in range(3):
+    #     for batch in dataset:
+    #         X, y = batch
+    #         X, y = X.to('cuda'), y.to('cuda')
+    #         yhat = clf(X)
+    #         loss = loss_fn(yhat, y)
             
-            # Apply backprop
+    #         # Apply backprop
 
-            opt.zero_grad()
-            loss.backward()
-            opt.step()
+    #         opt.zero_grad()
+    #         loss.backward()
+    #         opt.step()
 
-        print(f"Epoch: {epoch} loss is {loss.item()}")
+    #     print(f"Epoch: {epoch} loss is {loss.item()}")
 
-    with open('modelstate.pt', 'wb') as f:
-        save(clf.state_dict(), f)
+    with open('modelstate.pt', 'rb') as f:
+        clf.load_state_dict(load(f))
+
+        img = Image.open('img_2.jpg')
+        img_tensor = ToTensor()(img).unsqueeze(0).to('cuda')
+
+        print(torch.argmax(clf(img_tensor)))
